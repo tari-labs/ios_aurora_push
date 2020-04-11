@@ -67,4 +67,4 @@ jspm_packages/
 package-lock.json
 data/
 
-keys.json
+certs/*
