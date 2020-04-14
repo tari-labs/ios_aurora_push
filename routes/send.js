@@ -21,6 +21,7 @@ const pushNotifications = new PushNotifications({
         production
     }
     //TODO Add config for google services
+    //https://github.com/appfeel/node-pushnotifications#1-import-and-setup-push-module
 });
 
 router.use('/:to_pub_key', check_signature);
@@ -54,7 +55,8 @@ function send(req, res, next) {
             return
         }
 
-        //https://github.com/parse-community/node-apn/blob/master/doc/notification.markdown
+        //TODO might need additional params for android
+        //https://github.com/appfeel/node-pushnotifications#3-send-the-notification
         const payload = {
             title: "Incoming Tari",
             topic: 'com.tari.wallet',
