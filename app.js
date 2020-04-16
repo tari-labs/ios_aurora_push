@@ -8,6 +8,7 @@ const indexRouter = require('./routes/index');
 const registerRouter = require('./routes/register');
 const sendRouter = require('./routes/send');
 const adminRouter = require('./routes/admin');
+const healthRouter = require('./routes/health');
 
 const app = express();
 
@@ -23,5 +24,6 @@ app.use('/', indexRouter);
 app.use('/register', registerRouter);
 app.use('/send', sendRouter);
 app.use('/super-duper-only', adminRouter);
+app.use('/health', healthRouter);
 
 module.exports = app;
