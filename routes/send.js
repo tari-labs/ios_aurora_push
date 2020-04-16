@@ -58,11 +58,12 @@ function send(req, res, next) {
         //TODO might need additional params for android
         //https://github.com/appfeel/node-pushnotifications#3-send-the-notification
         const payload = {
-            title: "Incoming Tari",
+            title: "You've got Tari",
             topic: 'com.tari.wallet',
-            body: "Open the app to confirm the transaction",
+            body: "Someone just sent you Tari.",
             badge: 1,
             pushType: "alert",
+            sound: 'ping.aiff',
             expiry: Math.floor(Date.now() / 1000) + (60 * 60 * expiresAfterHours)
         };
 
@@ -73,13 +74,13 @@ function send(req, res, next) {
                     res.json({ sent: true })
                 } else {
                     debug("Push notification failed to deliver");
-                    debug(results[0]);
+                    debug(JSON.stringify(results[0]));
                     res.json({ sent: false })
                 }
             })
             .catch((err) => {
                 debug("Push request failed");
-                debug(err);
+                debug(JSON.stringify(err));
                 res.json({sent: false})
             });
     }).catch(err => {
