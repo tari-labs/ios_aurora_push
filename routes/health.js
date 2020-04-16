@@ -25,29 +25,33 @@ function canReadFile(targetPath) {
     })
 }
 
+const OK = "0";
+const DB_UNREACHABLE = "1";
+const CERT_UNREADABLE = "2";
+
 function healthCheck(req, res, next) {
     return db.healthCheck().then(dbResult => {
-        if (dbResult) {
-            canReadFile(`certs/${process.env.APPLE_CERT_NAME}`).then((success) => {
-                if (success) {
-                    return res.send("0")
-                } else {
-                    console.error("Failed to read cert");
-                    return res.send("1")
-                }
-            }).catch((error) => {
-                console.error("Failed to read cert");
-                debug(error);
-                return res.send("1")
-            });
-        } else {
+        if (!dbResult) {
             console.error("Missing DB result");
-            return res.send("1")
+            return res.send(DB_UNREACHABLE);
         }
+
+        canReadFile(`certs/${process.env.APPLE_CERT_NAME}`).then((success) => {
+            if (success) {
+                return res.send(OK);
+            } else {
+                console.error("Failed to read cert");
+                return res.send(CERT_UNREADABLE);
+            }
+        }).catch((error) => {
+            console.error("Failed to read cert");
+            debug(error);
+            return res.send(CERT_UNREADABLE);
+        });
     }).catch(err => {
         console.error("DB connection error");
-        debug(err)
-        return res.status(500).send("1")
+        debug(err);
+        return res.status(500).send(DB_UNREACHABLE);
     });
 }
 
