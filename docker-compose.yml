@@ -2,31 +2,26 @@ version: "3.4"
 services:
   pg:
     image: postgres:12.1
-    user: postgres
     restart: on-failure
     env_file: .env
+    expose:
+      - 5432
     volumes:
       - ./data/postgresql/:/var/lib/postgresql/data
       - ./migrations:/docker-entrypoint-initdb.d
-    ports:
-      - 5432:5432
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "postgres"]
       interval: 1s
       timeout: 3s
       retries: 30
 
-  nodejs:
-    image: node:13.8-slim
+  api:
+    build:
+      context: .
     depends_on:
       - pg
-    env_file: .env
     user: "node"
-    working_dir: /home/node/app
-    volumes:
-      - .:/home/node/app/
+    env_file: .env
     ports:
       - 4000:4000
-    expose:
-      - 4000
-    command: ["npm", "start"]
+    command: ["npm", "run", "start"]
