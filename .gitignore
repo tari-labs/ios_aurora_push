@@ -65,6 +65,8 @@ jspm_packages/
 
 # Temporary
 package-lock.json
-data/
 
+# Data folder
+data/*
+# Certs folder
 certs/*

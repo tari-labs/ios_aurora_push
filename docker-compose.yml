@@ -1,13 +1,16 @@
-version: "3.4"
+version: "3.5"
 services:
   pg:
     image: postgres:12.1
-    restart: on-failure
+#    user: postgres
+#    user: $(id -u):$(id -g)
+    restart: unless-stopped
     env_file: .env
+    shm_size: '256mb'
     expose:
       - 5432
     volumes:
-      - ./data/postgresql/:/var/lib/postgresql/data
+      - ./data/postgresql:/var/lib/postgresql/data
       - ./migrations:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "postgres"]
@@ -21,7 +24,13 @@ services:
     depends_on:
       - pg
     user: "node"
+    restart: unless-stopped
     env_file: .env
     ports:
-      - 4000:4000
+      - ${APIPORT}:3000
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 1s
+      timeout: 3s
+      retries: 30
     command: ["npm", "run", "start"]
