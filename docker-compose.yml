@@ -4,6 +4,7 @@ services:
     image: postgres:12.1
 #    user: postgres
 #    user: $(id -u):$(id -g)
+#    user: ${PGUSERID}
     restart: unless-stopped
     env_file: .env
     shm_size: '256mb'
@@ -23,11 +24,14 @@ services:
       context: .
     depends_on:
       - pg
-    user: "node"
+#    user: "node"
+    user: ${APIUSERID}
     restart: unless-stopped
     env_file: .env
     ports:
       - ${APIPORT}:3000
+    volumes:
+      - ./certs:/home/node/app/certs
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
       interval: 1s
