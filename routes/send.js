@@ -5,6 +5,7 @@ const debug = require('debug')('aurora_push:routes:send');
 const router = express.Router();
 const db = require('../lib/database');
 
+const ticker = process.env.TICKER || "tXTR";
 const expiresAfterHours = process.env.EXPIRE_PUSH_AFTER_HOURS || 24;
 const production = process.env.NODE_ENV == "production";
 if (!production) {
@@ -58,9 +59,9 @@ function send(req, res, next) {
         //TODO might need additional params for android
         //https://github.com/appfeel/node-pushnotifications#3-send-the-notification
         const payload = {
-            title: "You've got Tari",
+            title: `You've got ${ticker}`,
             topic: 'com.tari.wallet',
-            body: "Someone just sent you Tari.",
+            body: `Someone just sent you ${ticker}.`,
             badge: 1,
             pushType: "alert",
             sound: 'ping.aiff',

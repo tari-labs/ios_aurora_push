@@ -8,7 +8,7 @@ router.get('/list', list);
 function simple_auth(req, res, next) {
     let token = req.query.token || "invalid";
     if (token !== process.env.ADMIN_TOKEN) {
-        res.status(500).json({
+        return res.status(500).json({
             error: "Unauthorized access"
         });
     }
