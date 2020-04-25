@@ -68,3 +68,4 @@ package-lock.json
 data/
 
 certs/*
+test.js

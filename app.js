@@ -7,6 +7,7 @@ const middleware = require('./middleware');
 const indexRouter = require('./routes/index');
 const registerRouter = require('./routes/register');
 const sendRouter = require('./routes/send');
+const cancelRouter = require('./routes/cancel_reminders');
 const adminRouter = require('./routes/admin');
 const healthRouter = require('./routes/health');
 
@@ -23,6 +24,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', indexRouter);
 app.use('/register', registerRouter);
 app.use('/send', sendRouter);
+app.use('/cancel-reminders', cancelRouter);
 app.use('/super-duper-only', adminRouter);
 app.use('/health', healthRouter);
 
