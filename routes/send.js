@@ -6,6 +6,7 @@ const router = express.Router();
 const db = require('../lib/database');
 
 const ticker = process.env.TICKER || "tXTR";
+const appApiKey = process.env.APP_API_KEY || "";
 const expiresAfterHours = process.env.EXPIRE_PUSH_AFTER_HOURS || 24;
 const production = process.env.NODE_ENV == "production";
 if (!production) {
@@ -33,12 +34,21 @@ router.post('/:to_pub_key', send);
 function check_signature(req, res, next) {
     const to_pub_key = req.params.to_pub_key;
     const { from_pub_key, signature, public_nonce } = req.body;
-    const msg = `${from_pub_key}${to_pub_key}`;
+    const msg = `${appApiKey}${from_pub_key}${to_pub_key}`;
     const check = tari_crypto.check_signature(public_nonce, signature, from_pub_key, msg);
 
     if (check.result === true) {
+        console.log("Valid with new check");
         return next();
     }
+
+    //TODO remove this check after apps have had enough time to update to using the api key
+    const check_deprecated = tari_crypto.check_signature(public_nonce, signature, from_pub_key, `${from_pub_key}${to_pub_key}`);
+    if (check_deprecated.result === true) {
+        console.log("Valid with old check");
+        return next();
+    }
+
     res.status(403).json({ error: `Invalid request signature. ${check.error}`});
 }
 
@@ -51,6 +61,7 @@ function send(req, res, next) {
         const token = result ? result.token : null;
         if (!token) {
             res.status(404).json({
+                success: false,
                 error: "User not registered for push notifications"
             });
             return
@@ -72,21 +83,22 @@ function send(req, res, next) {
             .then((results) => {
                 if (results[0].success) {
                     debug("Push notification delivered");
-                    res.json({ sent: true })
+                    res.json({ success: true })
                 } else {
                     debug("Push notification failed to deliver");
                     debug(JSON.stringify(results[0]));
-                    res.json({ sent: false })
+                    res.json({ success: false })
                 }
             })
             .catch((err) => {
                 debug("Push request failed");
                 debug(JSON.stringify(err));
-                res.json({sent: false})
+                res.json({success: false})
             });
     }).catch(err => {
         debug(err);
         res.status(500).json({
+            success: false,
             error: err
         });
     });
