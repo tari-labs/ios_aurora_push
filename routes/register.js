@@ -33,7 +33,6 @@ function check_pub_key(req, res, next) {
 }
 
 function register(req, res, next) {
-    //TODO validate input
     const pub_key = req.params.pub_key;
     const token = req.body.token;
     const platform = req.body.platform.toLowerCase();
