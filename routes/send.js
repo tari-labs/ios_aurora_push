@@ -64,6 +64,7 @@ async function send(req, res, next) {
         badge: 1,
         pushType: "alert",
         sound: 'ping.aiff',
+        mutableContent: true,
         expiry: Math.floor(Date.now() / 1000) + (60 * 60 * EXPIRES_AFTER_HOURS)
     };
 
@@ -78,10 +79,10 @@ async function send(req, res, next) {
             debug(JSON.stringify(sendResult[0]));
             success = false;
         }
-    } catch (error) {
-        console.error(error);
+    } catch (err) {
+        console.error(err);
         success = false;
-        error = error;
+        error = err;
     }
 
     if (REMINDER_PUSH_NOTIFICATIONS_ENABLED) {
@@ -94,6 +95,7 @@ async function send(req, res, next) {
     }
 
     if (!success) {
+        console.error(error);
         return res.status(500).json({
             success: false,
             error
