@@ -51,8 +51,9 @@ async function send(req, res, next) {
     try {
         const tokenRow = await db.get_user_token(to_pub_key);
         device_token = tokenRow.token;
-    } catch {
+    } catch (error) {
         console.error(`Failed to get device token for pub_key ${to_pub_key}`);
+        console.error(error);
     }
 
     //TODO might need additional params for android
