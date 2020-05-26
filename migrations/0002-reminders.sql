@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS reminder_notifications
     id              SERIAL PRIMARY KEY,
     pub_key         CHAR(64) NOT NULL,
     reminder_type   reminder_types NOT NULL,
-    send_at         timestamp,
+    send_at         timestamp NOT NULL,
     created_at      timestamp NOT NULL DEFAULT NOW()
 );
 
