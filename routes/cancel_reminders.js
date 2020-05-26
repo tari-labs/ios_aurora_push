@@ -7,8 +7,8 @@ router.post('/', cancelReminders);
 
 function cancelReminders(req, res, next) {
     //TODO Dummy endpoint for now so app can be submitted as is
-    //TODO message = cancel-transactions-\(pubKeyHex)
-    return res.json({ cancelled: true })
+    //TODO message = `${appApikey}cancel-reminders-${pubKeyHex}`
+    return res.json({ success: true })
 }
 
 module.exports = router;

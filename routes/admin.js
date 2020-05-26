@@ -1,9 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../lib/database');
+const reminders = require('../lib/reminders');
 
 router.use(simple_auth);
 router.get('/list', list);
+// router.get('/list-reminders', list_reminders);
 
 function simple_auth(req, res, next) {
     let token = req.query.token || "invalid";
@@ -15,15 +17,20 @@ function simple_auth(req, res, next) {
     return next();
 }
 
-//TODO after testing remove this endpoint
 function list(req, res, next) {
     return db.admin_list().then(rows => {
         return res.json(rows)
-    }).catch(err => {
-        res.status(500).json({
-            error: err
-        });
+    }).catch(error => {
+        return res.status(500).json({ error });
     });
 }
+
+// function list_reminders(req, res, next) {
+//     return db.list_reminders(new Date().addHours(24*365)).then(rows => {
+//         return res.json(rows)
+//     }).catch(error => {
+//         return res.status(500).json({ error });
+//     });
+// }
 
 module.exports = router;

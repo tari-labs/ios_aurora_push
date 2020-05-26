@@ -69,3 +69,4 @@ data/
 
 certs/*
 test.js
+routes/deeplink.js
