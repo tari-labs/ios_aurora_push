@@ -50,6 +50,9 @@ async function send(req, res, next) {
 
     try {
         const tokenRow = await db.get_user_token(to_pub_key);
+        if (!tokenRow) {
+            return res.status(404).json({ success: false });
+        }
         device_token = tokenRow.token;
     } catch (error) {
         console.error(`Failed to get device token for pub_key ${to_pub_key}`);
