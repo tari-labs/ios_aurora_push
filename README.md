@@ -8,7 +8,8 @@ POST http://localhost:4000/register/:pub_key
     "token": "device_token_goes_here",
     "platform": "ios", //"ios" or "android"
     "signature": "abc123", //Message to sign is "app_api_key" + "pub_key" + "token"
-    "public_nonce": "def456" 
+    "public_nonce": "def456",
+    "sandbox": false //Set this to true if token was registered from an app running in debug
 }
 ```
 

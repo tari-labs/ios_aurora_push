@@ -36,8 +36,9 @@ function register(req, res, next) {
     const pub_key = req.params.pub_key;
     const token = req.body.token;
     const platform = req.body.platform.toLowerCase();
+    const sandbox = !!req.body.sandbox;
 
-    return db.register_token(pub_key, token, platform).then(() => {
+    return db.register_token(pub_key, token, platform, sandbox).then(() => {
         res.json({success: true})
     }).catch(err => {
         console.log(JSON.stringify(err));
