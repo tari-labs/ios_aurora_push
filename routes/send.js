@@ -5,7 +5,8 @@ const router = express.Router();
 const db = require('../lib/database');
 const reminders = require('../lib/reminders');
 
-const push_notifications = require("../lib/push_notifications")();
+const push_notifications = require("../lib/push_notifications").push_notifications_factory();
+const sandbox_push_notifications = require("../lib/push_notifications").sandbox_push_notifications_factory();
 
 const TICKER = process.env.TICKER || "tXTR";
 const APP_API_KEY = process.env.APP_API_KEY || "";
@@ -47,6 +48,7 @@ async function send(req, res, next) {
     let success;
     let error;
     let device_token;
+    let sandbox = false;
 
     try {
         const tokenRow = await db.get_user_token(to_pub_key);
@@ -54,6 +56,7 @@ async function send(req, res, next) {
             return res.status(404).json({ success: false });
         }
         device_token = tokenRow.token;
+        sandbox = tokenRow.sandbox;
     } catch (error) {
         console.error(`Failed to get device token for pub_key ${to_pub_key}`);
         console.error(error);
@@ -73,11 +76,12 @@ async function send(req, res, next) {
     };
 
     try {
-        const sendResult = await push_notifications.send(device_token, payload);
+        const service = sandbox ? sandbox_push_notifications : push_notifications;
+        const sendResult = await service.send(device_token, payload);
         if (sendResult[0].success) {
             //Initial send a success, this is the result we'll use independent on whether or not reminders were scheduled successfully
             success = true;
-            debug("Push notification delivered");
+            debug(`Push notification delivered (sandbox=${sandbox})`);
         } else {
             console.error("Push notification failed to deliver.")
             debug(JSON.stringify(sendResult[0]));
