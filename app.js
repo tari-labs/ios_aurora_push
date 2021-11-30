@@ -28,4 +28,11 @@ app.use('/cancel-reminders', cancelRouter);
 app.use('/super-duper-only', adminRouter);
 app.use('/health', healthRouter);
 
+app.use(function(err, req, res, next) {
+    if (res.headersSent) {
+      return next(err);
+    }
+    console.error(err)
+    return res.json(err);
+});
 module.exports = app;

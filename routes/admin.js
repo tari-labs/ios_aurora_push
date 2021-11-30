@@ -20,9 +20,7 @@ function simple_auth(req, res, next) {
 function list(req, res, next) {
     return db.admin_list().then(rows => {
         return res.json(rows)
-    }).catch(error => {
-        return res.status(500).json({ error });
-    });
+    }).catch(next);
 }
 
 // function list_reminders(req, res, next) {

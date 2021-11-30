@@ -40,12 +40,7 @@ function register(req, res, next) {
 
     return db.register_token(pub_key, token, platform, sandbox).then(() => {
         res.json({success: true})
-    }).catch(err => {
-        console.log(JSON.stringify(err));
-        res.status(500).json({
-            error: err
-        });
-    });
+    }).catch(next);
 }
 
 module.exports = router;
