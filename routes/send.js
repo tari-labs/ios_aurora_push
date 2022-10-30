@@ -36,7 +36,7 @@ function check_signature(req, res, next) {
         return next();
     }
 
-    res.status(403).json({ error: `Invalid request signature. ${check.error}`});
+    res.status(403).json({ error: `Invalid request signature. ${check.error}` });
 }
 
 //TODO middleware to throttle senders based on from_pub_key
@@ -47,18 +47,15 @@ async function send(req, res, next) {
 
     let success;
     let error;
-    let device_token;
-    let sandbox = false;
+    let tokenRows = [];
 
     try {
-        const tokenRow = await db.get_user_token(to_pub_key);
-        if (!tokenRow) {
+        tokenRows = await db.get_user_token(to_pub_key);
+        if (!tokenRows && Array.isArray(tokenRows) && tokenRows.length === 0) {
             return res.status(404).json({ success: false });
         }
-        device_token = tokenRow.token;
-        sandbox = tokenRow.sandbox;
     } catch (error) {
-        console.error(`Failed to get device token for pub_key ${to_pub_key}`);
+        console.error(`Failed to get device tokens for pub_key ${to_pub_key}`);
         console.error(error);
     }
 
@@ -76,16 +73,18 @@ async function send(req, res, next) {
     };
 
     try {
-        const service = sandbox ? sandbox_push_notifications : push_notifications;
-        const sendResult = await service.send(device_token, payload);
-        if (sendResult[0].success) {
-            //Initial send a success, this is the result we'll use independent on whether or not reminders were scheduled successfully
-            success = true;
-            debug(`Push notification delivered (sandbox=${sandbox})`);
-        } else {
-            console.error("Push notification failed to deliver.")
-            debug(JSON.stringify(sendResult[0]));
-            success = false;
+        for (const { token, sandbox } of tokenRows) {
+            const service = sandbox ? sandbox_push_notifications : push_notifications;
+            const sendResult = await service.send(token, payload);
+            if (sendResult[0].success) {
+                //Initial send a success, this is the result we'll use independent on whether or not reminders were scheduled successfully
+                success = true;
+                debug(`Push notification delivered (sandbox=${sandbox})`);
+            } else {
+                console.error("Push notification failed to deliver.")
+                debug(JSON.stringify(sendResult[0]));
+                success = false;
+            }
         }
     } catch (err) {
         console.error(err);
@@ -96,7 +95,7 @@ async function send(req, res, next) {
     if (REMINDER_PUSH_NOTIFICATIONS_ENABLED) {
         try {
             await reminders.schedule_reminders_for_sender(to_pub_key, from_pub_key);
-        } catch(error) {
+        } catch (error) {
             console.error("Failed to schedule reminder push notifications");
             console.error(error);
         }

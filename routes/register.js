@@ -8,6 +8,7 @@ const appApiKey = process.env.APP_API_KEY || "";
 
 router.use('/:pub_key', check_pub_key);
 router.post('/:pub_key', register);
+router.delete('/:pub_key', remove_device);
 
 // Check that the pub key is accompanied by a valid signature.
 // signature = pub_key + device token
@@ -39,6 +40,15 @@ function register(req, res, next) {
     const sandbox = !!req.body.sandbox;
 
     return db.register_token(pub_key, token, platform, sandbox).then(() => {
+        res.json({success: true})
+    }).catch(next);
+}
+
+function remove_device(req, res, next) {
+    const pub_key = req.params.pub_key;
+    const token = req.body.token;
+
+    return db.delete_token(pub_key, token).then(() => {
         res.json({success: true})
     }).catch(next);
 }

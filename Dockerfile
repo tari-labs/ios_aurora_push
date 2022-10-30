@@ -1,10 +1,11 @@
-FROM node:lts-alpine3.14
+FROM node:lts-alpine3.16
 
-
+RUN apk add --no-cache tini
 WORKDIR /home/node/app
 COPY ./package*.json ./
 RUN npm install
 COPY . .
 USER "node"
-EXPOSE 4000
-CMD [ "npm", "run", "start" ]
+EXPOSE 3000
+
+ENTRYPOINT ["tini", "--", "node", "./bin/www"]
