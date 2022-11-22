@@ -1,67 +1,55 @@
----
-name: Build docker image
-
-permissions:
-  contents: read
-
+name: Build Docker image
 on:
   push:
     branches:
-    - 'master'
+      - main
     tags:
-    - '*'
+      - '*'
+env:
+  IMAGE_NAME: ios-aurora-push
+  NODE_VERSION: 18
 
 jobs:
-  build_docker:
-    runs-on: ubuntu-latest
+  build-and-push-image:
+    runs-on: [self-hosted, linux]
     steps:
-      - uses: actions/checkout@v2
-
-      - name: Prepare
-        id: prep
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Extract short git hash
+        id: vars
         run: |
-          TAG=$(echo $GITHUB_SHA | head -c7)
-          TS=$(date +%s)
-          echo ::set-output name=branch_name::$(echo ${GITHUB_REF##*/})
-          echo ::set-output name=tag::${TAG}
-          echo ::set-output name=ts::${TS}
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
-      - name: Setup docker context for buildx
-        id: buildx-context
-        run: |
-          docker context create builders
-      - name: Set up Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@v1
+          echo sha_short=$(echo $GITHUB_SHA | head -c7) >> $GITHUB_OUTPUT
+          echo branch_name=$(echo ${GITHUB_REF##*/}) >> $GITHUB_OUTPUT
+          echo TS=$(date +%s) >> $GITHUB_OUTPUT
+      - name: Log in to the Container registry
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
         with:
-          endpoint: builders
-      - name: Available platforms
-        run: echo ${{ steps.buildx.outputs.platforms }}
-      - name: Login to ECR
-        uses: docker/login-action@v1
-        with:
-          registry: 204844199509.dkr.ecr.eu-west-1.amazonaws.com
-          username: ${{ secrets.ECR_AWS_ACCESS_KEY_ID }}
-          password: ${{ secrets.ECR_AWS_SECRET_ACCESS_KEY }}
-
-      - name: Docker meta
+          registries: 072270118115
+      - name: Extract metadata (tags, labels) for Docker
         id: meta
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v4
         with:
-          images: 204844199509.dkr.ecr.eu-west-1.amazonaws.com/ios-aurora-push
+          images: ${{ steps.login-ecr.outputs.registry }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=sha,prefix=${{ steps.prep.outputs.branch_name }}-,suffix=-${{ steps.prep.outputs.ts }}
+            type=sha,prefix=${{ steps.vars.outputs.branch_name }}-,suffix=-${{ steps.vars.outputs.ts }}
             type=ref,event=branch
             type=ref,event=tag
-
-      - name: Build and push
-        id: docker_build
-        uses: docker/build-push-action@v2
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      - name: Setup docker context for buildx
+        id: buildx-context
+        run: docker context create builders
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
         with:
-          push: ${{ github.event_name != 'pull_request' }}
-          context: ./
+          endpoint: builders
+      - name: Build and push
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          push: true
+          file: Dockerfile
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64, linux/arm64
