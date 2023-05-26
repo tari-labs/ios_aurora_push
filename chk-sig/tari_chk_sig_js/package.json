@@ -1,0 +1,21 @@
+{
+  "name": "tari_chk_sig",
+  "collaborators": [
+    "The Tari Development Community"
+  ],
+  "description": "Tari Wallet Signature Checker",
+  "version": "0.16.12",
+  "license": "BSD-3-Clause",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tari-project/tari"
+  },
+  "files": [
+    "tari_chk_sig_bg.wasm",
+    "tari_chk_sig.js",
+    "tari_chk_sig.d.ts"
+  ],
+  "main": "tari_chk_sig.js",
+  "homepage": "https://tari.com",
+  "types": "tari_chk_sig.d.ts"
+}
