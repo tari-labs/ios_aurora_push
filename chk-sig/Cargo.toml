@@ -1,0 +1,28 @@
+[package]
+name = "tari_chk_sig"
+description = "Tari Wallet Signature Checker"
+authors = ["The Tari Development Community"]
+repository = "https://github.com/tari-project/tari"
+categories = ["cryptography"]
+homepage = "https://tari.com"
+readme = "README.md"
+license = "BSD-3-Clause"
+version = "0.16.12" # Keep in line with Tari crypto
+edition = "2018"
+
+[dependencies]
+tari_utilities = "0.4.10"
+tari_crypto = "0.16.12"
+
+serde = "1.0"
+serde-wasm-bindgen = { version = "0.5.0" }
+wasm-bindgen = { version = "^0.2", features = ["serde-serialize"] }
+
+[build-dependencies]
+cbindgen = "0.24.3"
+
+[lib]
+crate-type = ["lib", "cdylib"]
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = ["-Oz"]
