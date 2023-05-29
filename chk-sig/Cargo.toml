@@ -21,6 +21,11 @@ wasm-bindgen = { version = "^0.2", features = ["serde-serialize"] }
 [build-dependencies]
 cbindgen = "0.24.3"
 
+[dev-dependencies]
+wasm-bindgen-test = "0.3.36"
+rand = { version = "0.7.3", default-features = false, features = ["wasm-bindgen"] }
+getrandom = { version = "0.2.3", default-features = false, features = ["js"] }
+
 [lib]
 crate-type = ["lib", "cdylib"]
 

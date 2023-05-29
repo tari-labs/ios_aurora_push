@@ -89,3 +89,117 @@ pub fn check_signature(pub_nonce: &str, signature: &str, pub_key: &str, msg: &st
     result.result = sig.verify_message(&P, msg.as_bytes());
     serde_wasm_bindgen::to_value(&result).unwrap()
 }
+
+#[cfg(test)]
+mod test {
+    use rand::rngs::OsRng;
+    use tari_crypto::{keys::PublicKey, signatures::SchnorrSignature};
+    use wasm_bindgen_test::*;
+
+    use super::*;
+
+    hash_domain!(TestDomain, "com.tari.test");
+
+    const SAMPLE_CHALLENGE: &str =
+        "Cormac was completely aware that he was being manipulated, but how he could not see.";
+
+    fn check_signature(pub_nonce: &str, signature: &str, pub_key: &str, msg: &str) -> SignatureVerifyResult {
+        serde_wasm_bindgen::from_value(super::check_signature(pub_nonce, signature, pub_key, msg)).unwrap()
+    }
+
+    fn create_signature(
+        msg: &str,
+    ) -> (
+        RistrettoSchnorrWithDomain<WalletMessageSigningDomain>,
+        RistrettoPublicKey,
+        RistrettoSecretKey,
+    ) {
+        let (sk, pk) = RistrettoPublicKey::random_keypair(&mut OsRng);
+        let sig = RistrettoSchnorrWithDomain::sign_message(&sk, msg.as_bytes()).unwrap();
+        (sig, pk, sk)
+    }
+
+    #[wasm_bindgen_test]
+    fn it_errors_given_invalid_data() {
+        fn it_errors(pub_nonce: &str, signature: &str, pub_key: &str, msg: &str) {
+            let result = check_signature(pub_nonce, signature, pub_key, msg);
+            assert!(
+                !result.error.is_empty(),
+                "check_signature did not fail with args ({}, {}, {}, {})",
+                pub_nonce,
+                signature,
+                pub_key,
+                msg
+            );
+            assert!(!result.result);
+        }
+
+        it_errors("", "", "", SAMPLE_CHALLENGE);
+
+        let (sig, pk, _) = create_signature(SAMPLE_CHALLENGE);
+        it_errors(&sig.get_public_nonce().to_hex(), "", &pk.to_hex(), SAMPLE_CHALLENGE);
+    }
+
+    #[wasm_bindgen_test]
+    fn it_fails_if_verification_is_invalid() {
+        fn it_fails(pub_nonce: &str, signature: &str, pub_key: &str, msg: &str) {
+            let result = check_signature(pub_nonce, signature, pub_key, msg);
+            assert!(result.error.is_empty());
+            assert!(!result.result);
+        }
+
+        let (sig, pk, _) = create_signature(SAMPLE_CHALLENGE);
+
+        it_fails(
+            &RistrettoPublicKey::default().to_hex(),
+            &sig.get_signature().to_hex(),
+            &pk.to_hex(),
+            SAMPLE_CHALLENGE,
+        );
+        it_fails(
+            &sig.get_public_nonce().to_hex(),
+            &sig.get_signature().to_hex(),
+            &pk.to_hex(),
+            "wrong challenge",
+        );
+        it_fails(
+            &sig.get_public_nonce().to_hex(),
+            &sig.get_signature().to_hex(),
+            &RistrettoPublicKey::default().to_hex(),
+            SAMPLE_CHALLENGE,
+        );
+    }
+
+    #[wasm_bindgen_test]
+    fn it_fails_if_domain_is_invalid() {
+        fn it_fails(pub_nonce: &str, signature: &str, pub_key: &str, msg: &str) {
+            let result = check_signature(pub_nonce, signature, pub_key, msg);
+            assert!(result.error.is_empty());
+            assert!(!result.result);
+        }
+
+        let (sk, pk) = RistrettoPublicKey::random_keypair(&mut OsRng);
+        let sig: SchnorrSignature<RistrettoPublicKey, RistrettoSecretKey, TestDomain> =
+            RistrettoSchnorrWithDomain::sign_message(&sk, SAMPLE_CHALLENGE.as_bytes()).unwrap();
+
+        it_fails(
+            &sig.get_public_nonce().to_hex(),
+            &sig.get_signature().to_hex(),
+            &pk.to_hex(),
+            SAMPLE_CHALLENGE,
+        );
+    }
+
+    #[wasm_bindgen_test]
+    fn it_succeeds_given_valid_data() {
+        let (sig, pk, _) = create_signature(SAMPLE_CHALLENGE);
+        let result = check_signature(
+            &sig.get_public_nonce().to_hex(),
+            &sig.get_signature().to_hex(),
+            &pk.to_hex(),
+            SAMPLE_CHALLENGE,
+        );
+        assert!(result.error.is_empty());
+        assert!(result.result);
+    }
+}
