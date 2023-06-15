@@ -1,5 +1,5 @@
 const express = require('express');
-const tari_crypto = require('tari_crypto');
+const tari_crypto = require('tari_chk_sig');
 const debug = require('debug')('aurora_push:routes:keys');
 const router = express.Router();
 const db = require('../lib/database');
