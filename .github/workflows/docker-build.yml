@@ -6,6 +6,11 @@ on:
       - master
     tags:
       - '*'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   IMAGE_NAME: ios-aurora-push
   NODE_VERSION: 18
