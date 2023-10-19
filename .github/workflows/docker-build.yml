@@ -1,11 +1,15 @@
+---
 name: Build Docker image
-on:
+
+'on':
   push:
     branches:
       - main
       - master
+      - 'docker-*'
     tags:
       - '*'
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
