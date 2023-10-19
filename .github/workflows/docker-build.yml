@@ -4,8 +4,11 @@ on:
     branches:
       - main
       - master
+      - 'docker-*'
     tags:
       - '*'
+  workflow_dispatch:
+
 env:
   IMAGE_NAME: ios-aurora-push
   NODE_VERSION: 18
