@@ -19,6 +19,8 @@ function check_pub_key(req, res, next) {
 
     const check = tari_crypto.check_signature(public_nonce, signature, pub_key, msg);
 
+    console.warn("LEE: pub_key: ", pub_key, " token: ", token, " signature: ", signature, " public_nonce: ", public_nonce, " message: ", msg, " check.result: ", check.result, " check.error: ", check.error);
+
     if (check.result === true) {
         return next();
     }
