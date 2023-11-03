@@ -75,7 +75,7 @@ async function send(req, res, next) {
     try {
         for (const { token, sandbox } of tokenRows) {
             const service = sandbox ? sandbox_push_notifications : push_notifications;
-            const sendResult = await service.send(token, payload);
+            const sendResult = await service.send(token.trim(), payload);
             if (sendResult[0].success) {
                 //Initial send a success, this is the result we'll use independent on whether or not reminders were scheduled successfully
                 success = true;
