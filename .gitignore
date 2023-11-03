@@ -67,6 +67,9 @@ jspm_packages/
 package-lock.json
 data/
 
+# MacOS
+.DS_Store
+
 certs/*
 test.js
 routes/deeplink.js

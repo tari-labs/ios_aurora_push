@@ -6,9 +6,11 @@ CREATE TABLE IF NOT EXISTS push_tokens
 (
     id         SERIAL PRIMARY KEY,
     pub_key    CHAR(64) NOT NULL UNIQUE,
-    token      CHAR(64) NOT NULL,
+    token      CHAR(256) NOT NULL,
     platform   supported_platforms NOT NULL,
-    updated_at timestamp
+    updated_at timestamp,
+    sandbox    BOOLEAN NOT NULL DEFAULT FALSE,
+    CONSTRAINT index_pub_key_token UNIQUE (pub_key, token)
 );
 
 -- Indices
