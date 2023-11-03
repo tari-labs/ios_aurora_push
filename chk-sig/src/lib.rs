@@ -34,7 +34,10 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 // This line needs to match with the Domain separator in the Tari Wallet
 // https://github.com/tari-project/tari/blob/development/base_layer/wallet/src/wallet.rs#L106-L110
-hash_domain!(WalletMessageSigningDomain, "com.tari.base_layer.wallet.message_signing");
+hash_domain!(
+    WalletMessageSigningDomain,
+    "com.tari.tari_project.base_layer.wallet.message_signing"
+);
 
 /// The version of this library
 #[wasm_bindgen]
