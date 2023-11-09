@@ -83,7 +83,7 @@ pub fn check_signature(pub_nonce: &str, signature: &str, pub_key: &str, msg: &st
     };
 
     let sig: RistrettoSchnorrWithDomain<WalletMessageSigningDomain> = RistrettoSchnorrWithDomain::new(R, s);
-    result.result = sig.verify_message(&P, msg.as_bytes());
+    result.result = sig.verify(&P, msg.as_bytes());
     serde_wasm_bindgen::to_value(&result).unwrap()
 }
 
@@ -112,7 +112,7 @@ mod test {
         RistrettoSecretKey,
     ) {
         let (sk, pk) = RistrettoPublicKey::random_keypair(&mut OsRng);
-        let sig = RistrettoSchnorrWithDomain::sign_message(&sk, msg.as_bytes()).unwrap();
+        let sig = RistrettoSchnorrWithDomain::sign(&sk, msg.as_bytes(), &mut OsRng).unwrap();
         (sig, pk, sk)
     }
 
@@ -177,7 +177,7 @@ mod test {
 
         let (sk, pk) = RistrettoPublicKey::random_keypair(&mut OsRng);
         let sig: SchnorrSignature<RistrettoPublicKey, RistrettoSecretKey, TestDomain> =
-            RistrettoSchnorrWithDomain::sign_message(&sk, SAMPLE_CHALLENGE.as_bytes()).unwrap();
+            RistrettoSchnorrWithDomain::sign(&sk, SAMPLE_CHALLENGE.as_bytes(), &mut OsRng).unwrap();
 
         it_fails(
             &sig.get_public_nonce().to_hex(),
