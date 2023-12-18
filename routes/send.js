@@ -75,7 +75,11 @@ async function send(req, res, next) {
     try {
         for (const { token, sandbox } of tokenRows) {
             const service = sandbox ? sandbox_push_notifications : push_notifications;
+            debug(`The send service is (sandbox=${sandbox})`);
+
             const sendResult = await service.send(token.trim(), payload);
+            debug(`The sendResult of the notification service is ${sendResult}`);
+
             if (sendResult[0].success) {
                 //Initial send a success, this is the result we'll use independent on whether or not reminders were scheduled successfully
                 success = true;
@@ -87,7 +91,7 @@ async function send(req, res, next) {
             }
         }
     } catch (err) {
-        console.error(err);
+        console.error(`Error thrown from general try/catch ${err.message} : ${err}`);
         success = false;
         error = err;
     }
