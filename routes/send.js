@@ -136,14 +136,13 @@ async function sendFirebase(req, res, _next) {
         console.error(error);
     }
 
-    //TODO might need additional params for android
-    //https://github.com/appfeel/node-pushnotifications#3-send-the-notification
     const payload = {
         topic: 'com.tari.wallet',
         expiry: Math.floor(Date.now() / 1000) + (60 * 60 * EXPIRES_AFTER_HOURS),
         title,
         body
     };
+
     try {
         for (const { token, sandbox } of tokenRows) {
             const service = sandbox ? sandbox_push_notifications : firebase_push_notifications;
@@ -163,7 +162,7 @@ async function sendFirebase(req, res, _next) {
             }
         }
     } catch (err) {
-        console.error(`Error thrown from general try/catch ${err.message} : ${err}`);
+        debug(`Error thrown from general try/catch ${err.message} : ${err}`);
         success = false;
         error = err;
     }
