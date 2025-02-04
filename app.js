@@ -28,7 +28,7 @@ app.use('/cancel-reminders', cancelRouter);
 app.use('/super-duper-only', adminRouter);
 app.use('/health', healthRouter);
 
-app.use(function(err, req, res, next) {
+app.use(function(err, _req, res, next) {
     if (res.headersSent) {
       return next(err);
     }

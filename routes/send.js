@@ -7,6 +7,7 @@ const reminders = require('../lib/reminders');
 
 const push_notifications = require("../lib/push_notifications").push_notifications_factory();
 const sandbox_push_notifications = require("../lib/push_notifications").sandbox_push_notifications_factory();
+const firebase_push_notifications = require("../lib/push_notifications_firebase").sendPushNotification
 
 const TICKER = process.env.TICKER || "tXTR";
 const APP_API_KEY = process.env.APP_API_KEY || "";
@@ -15,6 +16,7 @@ const REMINDER_PUSH_NOTIFICATIONS_ENABLED = !!process.env.REMINDER_PUSH_NOTIFICA
 
 router.use('/:to_pub_key', check_signature);
 router.post('/:to_pub_key', send);
+router.post('/firebase/:to_pub_key', sendFirebase);
 
 // Check that the pub key is accompanied by a valid signature.
 // signature = from_pub_key + to_pub_key
@@ -41,7 +43,7 @@ function check_signature(req, res, next) {
 
 //TODO middleware to throttle senders based on from_pub_key
 
-async function send(req, res, next) {
+async function send(req, res, _next) {
     const to_pub_key = req.params.to_pub_key;
     const { from_pub_key } = req.body;
 
@@ -78,6 +80,76 @@ async function send(req, res, next) {
             debug(`The send service is (sandbox=${sandbox})`);
 
             const sendResult = await service.send(token.trim(), payload);
+            debug(`The sendResult of the notification service is ${sendResult}`);
+
+            if (sendResult[0].success) {
+                //Initial send a success, this is the result we'll use independent on whether or not reminders were scheduled successfully
+                success = true;
+                debug(`Push notification delivered (sandbox=${sandbox})`);
+            } else {
+                console.error("Push notification failed to deliver.")
+                debug(JSON.stringify(sendResult[0]));
+                success = false;
+            }
+        }
+    } catch (err) {
+        console.error(`Error thrown from general try/catch ${err.message} : ${err}`);
+        success = false;
+        error = err;
+    }
+
+    if (REMINDER_PUSH_NOTIFICATIONS_ENABLED) {
+        try {
+            await reminders.schedule_reminders_for_sender(to_pub_key, from_pub_key);
+        } catch (error) {
+            console.error("Failed to schedule reminder push notifications");
+            console.error(error);
+        }
+    }
+
+    if (!success) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            error
+        });
+    }
+
+    return res.json({ success: !!success });
+}
+
+async function sendFirebase(req, res, _next) {
+    const to_pub_key = req.params.to_pub_key;
+    const { from_pub_key, title, body } = req.body;
+
+    let success;
+    let error;
+    let tokenRows = [];
+
+    try {
+        tokenRows = await db.get_user_token(to_pub_key);
+        if (!tokenRows && Array.isArray(tokenRows) && tokenRows.length === 0) {
+            return res.status(404).json({ success: false });
+        }
+    } catch (error) {
+        console.error(`Failed to get device tokens for pub_key ${to_pub_key}`);
+        console.error(error);
+    }
+
+    //TODO might need additional params for android
+    //https://github.com/appfeel/node-pushnotifications#3-send-the-notification
+    const payload = {
+        topic: 'com.tari.wallet',
+        expiry: Math.floor(Date.now() / 1000) + (60 * 60 * EXPIRES_AFTER_HOURS),
+        title,
+        body
+    };
+    try {
+        for (const { token, sandbox } of tokenRows) {
+            const service = sandbox ? sandbox_push_notifications : firebase_push_notifications;
+            debug(`The send service is (sandbox=${sandbox})`);
+
+            const sendResult = await service(token.trim(), payload);
             debug(`The sendResult of the notification service is ${sendResult}`);
 
             if (sendResult[0].success) {

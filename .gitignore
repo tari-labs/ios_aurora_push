@@ -65,6 +65,7 @@ jspm_packages/
 
 # Temporary
 package-lock.json
+pnpm-lock.yaml
 data/
 
 # MacOS

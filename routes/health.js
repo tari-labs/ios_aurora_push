@@ -29,7 +29,7 @@ const OK = "0";
 const DB_UNREACHABLE = "1";
 const CERT_UNREADABLE = "2";
 
-function healthCheck(req, res, next) {
+async function healthCheck(_req, res, _next) {
     return db.healthCheck().then(dbResult => {
         if (!dbResult) {
             console.error("Missing DB result");
