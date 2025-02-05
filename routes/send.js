@@ -14,7 +14,7 @@ const APP_API_KEY = process.env.APP_API_KEY || "";
 const EXPIRES_AFTER_HOURS = process.env.EXPIRE_PUSH_AFTER_HOURS || 24;
 const REMINDER_PUSH_NOTIFICATIONS_ENABLED = !!process.env.REMINDER_PUSH_NOTIFICATIONS_ENABLED
 
-// router.use('/:to_pub_key', check_signature);
+router.use('/:to_pub_key', check_signature);
 router.post('/:to_pub_key', send);
 router.post('/firebase/:to_pub_key', sendFirebase);
 
