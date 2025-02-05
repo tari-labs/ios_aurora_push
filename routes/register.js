@@ -5,7 +5,7 @@ const db = require('../lib/database');
 
 const appApiKey = process.env.APP_API_KEY || "";
 
-router.use('/:pub_key', check_pub_key);
+// router.use('/:pub_key', check_pub_key);
 router.post('/:pub_key', register);
 router.delete('/:pub_key', remove_device);
 

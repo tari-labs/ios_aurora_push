@@ -14,7 +14,7 @@ const APP_API_KEY = process.env.APP_API_KEY || "";
 const EXPIRES_AFTER_HOURS = process.env.EXPIRE_PUSH_AFTER_HOURS || 24;
 const REMINDER_PUSH_NOTIFICATIONS_ENABLED = !!process.env.REMINDER_PUSH_NOTIFICATIONS_ENABLED
 
-router.use('/:to_pub_key', check_signature);
+// router.use('/:to_pub_key', check_signature);
 router.post('/:to_pub_key', send);
 router.post('/firebase/:to_pub_key', sendFirebase);
 
@@ -120,7 +120,7 @@ async function send(req, res, _next) {
 
 async function sendFirebase(req, res, _next) {
     const to_pub_key = req.params.to_pub_key;
-    const { from_pub_key, title, body } = req.body;
+    const { from_pub_key, title, body, topic } = req.body;
 
     let success;
     let error;
@@ -137,7 +137,7 @@ async function sendFirebase(req, res, _next) {
     }
 
     const payload = {
-        topic: 'com.tari.wallet',
+        topic,
         expiry: Math.floor(Date.now() / 1000) + (60 * 60 * EXPIRES_AFTER_HOURS),
         title,
         body
