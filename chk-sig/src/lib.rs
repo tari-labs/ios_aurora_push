@@ -22,11 +22,13 @@
 
 //! WASM bindings and functions
 
+use rand::rngs::OsRng;
 use serde::{Deserialize, Serialize};
 use tari_crypto::{
     hash_domain,
     ristretto::{RistrettoPublicKey, RistrettoSchnorrWithDomain, RistrettoSecretKey},
     tari_utilities::hex::Hex,
+    keys::SecretKey
 };
 use wasm_bindgen::prelude::*;
 
@@ -87,9 +89,65 @@ pub fn check_signature(pub_nonce: &str, signature: &str, pub_key: &str, msg: &st
     serde_wasm_bindgen::to_value(&result).unwrap()
 }
 
+fn create_random_keypair() -> (RistrettoSecretKey, RistrettoPublicKey) {
+    // RistrettoPublicKey::random_keypair(&mut OsRng)
+    use tari_utilities::{hex::Hex, ByteArray};
+
+    let mut rng = rand::thread_rng();
+    let _p1 = RistrettoPublicKey::from_canonical_bytes(&[
+        224, 196, 24, 247, 200, 217, 196, 205, 215, 57, 91, 147, 234, 18, 79, 58, 217, 144, 33, 187, 104, 29, 252, 51,
+        2, 169, 217, 154, 46, 83, 230, 78,
+    ]);
+    let _p2 = RistrettoPublicKey::from_hex(&"e882b131016b52c1d3337080187cf768423efccbb517bb495ab812c4160ff44e");
+    let sk = RistrettoSecretKey::random(&mut rng);
+    let _p3 = RistrettoPublicKey::from_vec(&sk.to_vec()).unwrap();
+    (sk, _p3)
+}
+
+fn create_signature(
+    msg: &str,
+    pub_key: Option<&str>,
+    priv_key: Option<&str>,
+) -> (
+    RistrettoSchnorrWithDomain<WalletMessageSigningDomain>,
+    RistrettoPublicKey,
+    RistrettoSecretKey,
+) {
+    let (dsk, dpk) = create_random_keypair();
+    let sk = if let Some(priv_key) = priv_key {
+        RistrettoSecretKey::from_hex(priv_key).unwrap()
+    } else {
+        dsk
+    };
+
+    let pk = if let Some(pub_key) = pub_key {
+        RistrettoPublicKey::from_hex(pub_key).unwrap()
+    } else {
+        dpk
+    };
+    let sig = RistrettoSchnorrWithDomain::sign(&sk, msg.as_bytes(), &mut OsRng).unwrap();
+    (sig, pk, sk)
+}
+
+/// Creates a signature using Schnorr. Returns a [JsValue] of a serialized
+/// [SignatureCreation]
+#[allow(non_snake_case)]
+#[wasm_bindgen]
+pub fn sign(msg: &str, pub_key: &str, priv_key: &str) -> JsValue {
+    let result = create_signature(msg, Some(pub_key), Some(priv_key));
+    serde_wasm_bindgen::to_value(&result).unwrap()
+}
+
+/// Creates a signature using Schnorr. Returns a [JsValue] of a serialized
+/// [SignatureCreation]
+#[wasm_bindgen]
+pub fn create_keypair() -> JsValue {
+    let (sk, pk) = create_random_keypair();
+    serde_wasm_bindgen::to_value(&(sk.to_hex(), pk.to_hex())).unwrap()
+}
+
 #[cfg(test)]
 mod test {
-    use rand::rngs::OsRng;
     use tari_crypto::{keys::PublicKey, signatures::SchnorrSignature};
     use wasm_bindgen_test::*;
 
@@ -102,18 +160,6 @@ mod test {
 
     fn check_signature(pub_nonce: &str, signature: &str, pub_key: &str, msg: &str) -> SignatureVerifyResult {
         serde_wasm_bindgen::from_value(super::check_signature(pub_nonce, signature, pub_key, msg)).unwrap()
-    }
-
-    fn create_signature(
-        msg: &str,
-    ) -> (
-        RistrettoSchnorrWithDomain<WalletMessageSigningDomain>,
-        RistrettoPublicKey,
-        RistrettoSecretKey,
-    ) {
-        let (sk, pk) = RistrettoPublicKey::random_keypair(&mut OsRng);
-        let sig = RistrettoSchnorrWithDomain::sign(&sk, msg.as_bytes(), &mut OsRng).unwrap();
-        (sig, pk, sk)
     }
 
     #[wasm_bindgen_test]
@@ -133,7 +179,7 @@ mod test {
 
         it_errors("", "", "", SAMPLE_CHALLENGE);
 
-        let (sig, pk, _) = create_signature(SAMPLE_CHALLENGE);
+        let (sig, pk, _) = create_signature(SAMPLE_CHALLENGE, None, None);
         it_errors(&sig.get_public_nonce().to_hex(), "", &pk.to_hex(), SAMPLE_CHALLENGE);
     }
 
@@ -145,7 +191,7 @@ mod test {
             assert!(!result.result);
         }
 
-        let (sig, pk, _) = create_signature(SAMPLE_CHALLENGE);
+        let (sig, pk, _) = create_signature(SAMPLE_CHALLENGE, None, None);
 
         it_fails(
             &RistrettoPublicKey::default().to_hex(),
@@ -175,7 +221,7 @@ mod test {
             assert!(!result.result);
         }
 
-        let (sk, pk) = RistrettoPublicKey::random_keypair(&mut OsRng);
+        let (sk, pk) = create_random_keypair();
         let sig: SchnorrSignature<RistrettoPublicKey, RistrettoSecretKey, TestDomain> =
             RistrettoSchnorrWithDomain::sign(&sk, SAMPLE_CHALLENGE.as_bytes(), &mut OsRng).unwrap();
 
@@ -189,7 +235,7 @@ mod test {
 
     #[wasm_bindgen_test]
     fn it_succeeds_given_valid_data() {
-        let (sig, pk, _) = create_signature(SAMPLE_CHALLENGE);
+        let (sig, pk, _) = create_signature(SAMPLE_CHALLENGE, None, None);
         let result = check_signature(
             &sig.get_public_nonce().to_hex(),
             &sig.get_signature().to_hex(),

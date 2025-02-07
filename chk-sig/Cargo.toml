@@ -17,6 +17,7 @@ tari_crypto = "0.20.0"
 serde = "1.0"
 serde-wasm-bindgen = { version = "0.5.0" }
 wasm-bindgen = { version = "^0.2", features = ["serde-serialize"] }
+rand = "0.8.5"
 
 [build-dependencies]
 cbindgen = "0.24.3"
