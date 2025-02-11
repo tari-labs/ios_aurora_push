@@ -38,6 +38,8 @@ async function sendFirebase(req, res, _next) {
     let error;
     let tokenRows = [];
 
+    let pubKey = to_pub_key;
+
     try {
         tokenRows = await db.get_user_token({ pubKey: to_pub_key, appId, userId });
         if (!tokenRows && Array.isArray(tokenRows) && tokenRows.length === 0) {
@@ -56,7 +58,8 @@ async function sendFirebase(req, res, _next) {
     };
 
     try {
-        for (const { token, sandbox } of tokenRows) {
+        for (const { token, sandbox, pub_key } of tokenRows) {
+            pubKey = pub_key;
             const service = sandbox ? sandbox_push_notifications : firebase_push_notifications;
             debug(`The send service is (sandbox=${sandbox})`);
 
