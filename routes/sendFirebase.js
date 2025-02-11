@@ -8,15 +8,19 @@ const reminders = require('../lib/reminders');
 const sandbox_push_notifications = require('../lib/push_notifications').sandbox_push_notifications_factory();
 const firebase_push_notifications = require('../lib/push_notifications_firebase').sendPushNotification;
 
-firebaseRouter.use(':to_pub_key', check_signature);
-firebaseRouter.post(':to_pub_key', sendFirebase);
+const APP_API_KEY = process.env.APP_API_KEY || '';
+const EXPIRES_AFTER_HOURS = process.env.EXPIRE_PUSH_AFTER_HOURS || 24;
+const REMINDER_PUSH_NOTIFICATIONS_ENABLED = !!process.env.REMINDER_PUSH_NOTIFICATIONS_ENABLED;
+
+firebaseRouter.use('/', check_signature);
+firebaseRouter.post('/', sendFirebase);
 
 // Check that the pub key is accompanied by a valid signature.
 // signature = from_pub_key + to_pub_key
 function check_signature(req, res, next) {
-    const to_pub_key = req.params.to_pub_key;
     const { from_pub_key, signature, public_nonce } = req.body;
-    const msg = `${APP_API_KEY}${from_pub_key}${to_pub_key}`;
+    const msg = `${APP_API_KEY}${from_pub_key}`;
+    console.log('msg', msg);
     const check = tari_crypto.check_signature(public_nonce, signature, from_pub_key, msg);
 
     if (check.result === true) {
@@ -24,31 +28,18 @@ function check_signature(req, res, next) {
         return next();
     }
 
-    //TODO remove this check after apps have had enough time to update to using the api key
-    const check_deprecated = tari_crypto.check_signature(
-        public_nonce,
-        signature,
-        from_pub_key,
-        `${from_pub_key}${to_pub_key}`
-    );
-    if (check_deprecated.result === true) {
-        console.log('Valid with old check');
-        return next();
-    }
-
     res.status(403).json({ error: `Invalid request signature. ${check.error}` });
 }
 
 async function sendFirebase(req, res, _next) {
-    const to_pub_key = req.params.to_pub_key;
-    const { from_pub_key, title, body, topic } = req.body;
+    const { to_pub_key, from_pub_key, title, body, topic, appId, userId } = req.body;
 
     let success;
     let error;
     let tokenRows = [];
 
     try {
-        tokenRows = await db.get_user_token(to_pub_key);
+        tokenRows = await db.get_user_token({ pubKey: to_pub_key, appId, userId });
         if (!tokenRows && Array.isArray(tokenRows) && tokenRows.length === 0) {
             return res.status(404).json({ success: false });
         }
