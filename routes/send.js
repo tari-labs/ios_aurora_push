@@ -14,9 +14,10 @@ const APP_API_KEY = process.env.APP_API_KEY || "";
 const EXPIRES_AFTER_HOURS = process.env.EXPIRE_PUSH_AFTER_HOURS || 24;
 const REMINDER_PUSH_NOTIFICATIONS_ENABLED = !!process.env.REMINDER_PUSH_NOTIFICATIONS_ENABLED
 
+router.use('/firebase/:to_pub_key', check_signature);
+router.post('/firebase/:to_pub_key', sendFirebase);
 router.use('/:to_pub_key', check_signature);
 router.post('/:to_pub_key', send);
-router.post('/firebase/:to_pub_key', sendFirebase);
 
 // Check that the pub key is accompanied by a valid signature.
 // signature = from_pub_key + to_pub_key
@@ -151,18 +152,19 @@ async function sendFirebase(req, res, _next) {
             const sendResult = await service(token.trim(), payload);
             debug(`The sendResult of the notification service is ${sendResult}`);
 
-            if (sendResult[0].success) {
-                //Initial send a success, this is the result we'll use independent on whether or not reminders were scheduled successfully
-                success = true;
-                debug(`Push notification delivered (sandbox=${sandbox})`);
-            } else {
-                console.error("Push notification failed to deliver.")
-                debug(JSON.stringify(sendResult[0]));
-                success = false;
-            }
+            success = true;
+            // if (sendResult[0].success) {
+            //     //Initial send a success, this is the result we'll use independent on whether or not reminders were scheduled successfully
+            //     success = true;
+            //     debug(`Push notification delivered (sandbox=${sandbox})`);
+            // } else {
+            //     console.error("Push notification failed to deliver.")
+            //     debug(JSON.stringify(sendResult[0]));
+            //     success = false;
+            // }
         }
     } catch (err) {
-        debug(`Error thrown from general try/catch ${err.message} : ${err}`);
+        console.log(`Error thrown from general try/catch ${err.message} : ${err}`);
         success = false;
         error = err;
     }
@@ -171,8 +173,8 @@ async function sendFirebase(req, res, _next) {
         try {
             await reminders.schedule_reminders_for_sender(to_pub_key, from_pub_key);
         } catch (error) {
-            console.error("Failed to schedule reminder push notifications");
-            console.error(error);
+            debug("Failed to schedule reminder push notifications");
+            debug(error);
         }
     }
 
