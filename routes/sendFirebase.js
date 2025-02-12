@@ -20,11 +20,9 @@ firebaseRouter.post('/', sendFirebase);
 function check_signature(req, res, next) {
     const { from_pub_key, signature, public_nonce } = req.body;
     const msg = `${APP_API_KEY}${from_pub_key}`;
-    console.log('msg', msg);
     const check = tari_crypto.check_signature(public_nonce, signature, from_pub_key, msg);
 
     if (check.result === true) {
-        console.log('Valid with new check');
         return next();
     }
 
@@ -42,12 +40,13 @@ async function sendFirebase(req, res, _next) {
 
     try {
         tokenRows = await db.get_user_token({ pubKey: to_pub_key, appId, userId });
-        if (!tokenRows && Array.isArray(tokenRows) && tokenRows.length === 0) {
+        if (!tokenRows || !Array.isArray(tokenRows) || tokenRows.length === 0) {
             return res.status(404).json({ success: false });
         }
     } catch (error) {
         console.error(`Failed to get device tokens for pub_key ${to_pub_key}`);
         console.error(error);
+        return res.status(404).json({ success: false, error: 'Failed to get device tokens' });
     }
 
     const payload = {
@@ -58,6 +57,7 @@ async function sendFirebase(req, res, _next) {
     };
 
     try {
+        success = false;
         for (const { token, sandbox, pub_key } of tokenRows) {
             pubKey = pub_key;
             const service = sandbox ? sandbox_push_notifications : firebase_push_notifications;
@@ -65,7 +65,11 @@ async function sendFirebase(req, res, _next) {
 
             const sendResult = await service(token.trim(), payload);
             debug(`The sendResult of the notification service is ${sendResult}`);
-            success = true;
+            if (!sendResult) {
+                success = false;
+                error = 'Failed to send push notification';
+                break;
+            }
         }
     } catch (err) {
         console.log(`Error thrown from general try/catch ${err.message} : ${err}`);
