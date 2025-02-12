@@ -5,13 +5,13 @@ const router = express.Router();
 const db = require('../lib/database');
 const reminders = require('../lib/reminders');
 
-const push_notifications = require("../lib/push_notifications").push_notifications_factory();
-const sandbox_push_notifications = require("../lib/push_notifications").sandbox_push_notifications_factory();
+const push_notifications = require('../lib/push_notifications').push_notifications_factory();
+const sandbox_push_notifications = require('../lib/push_notifications').sandbox_push_notifications_factory();
 
-const TICKER = process.env.TICKER || "tXTR";
-const APP_API_KEY = process.env.APP_API_KEY || "";
+const TICKER = process.env.TICKER || 'tXTR';
+const APP_API_KEY = process.env.APP_API_KEY || '';
 const EXPIRES_AFTER_HOURS = process.env.EXPIRE_PUSH_AFTER_HOURS || 24;
-const REMINDER_PUSH_NOTIFICATIONS_ENABLED = !!process.env.REMINDER_PUSH_NOTIFICATIONS_ENABLED
+const REMINDER_PUSH_NOTIFICATIONS_ENABLED = !!process.env.REMINDER_PUSH_NOTIFICATIONS_ENABLED;
 
 router.use('/:to_pub_key', check_signature);
 router.post('/:to_pub_key', send);
@@ -25,14 +25,19 @@ function check_signature(req, res, next) {
     const check = tari_crypto.check_signature(public_nonce, signature, from_pub_key, msg);
 
     if (check.result === true) {
-        console.log("Valid with new check");
+        console.log('Valid with new check');
         return next();
     }
 
     //TODO remove this check after apps have had enough time to update to using the api key
-    const check_deprecated = tari_crypto.check_signature(public_nonce, signature, from_pub_key, `${from_pub_key}${to_pub_key}`);
+    const check_deprecated = tari_crypto.check_signature(
+        public_nonce,
+        signature,
+        from_pub_key,
+        `${from_pub_key}${to_pub_key}`
+    );
     if (check_deprecated.result === true) {
-        console.log("Valid with old check");
+        console.log('Valid with old check');
         return next();
     }
 
@@ -41,7 +46,7 @@ function check_signature(req, res, next) {
 
 //TODO middleware to throttle senders based on from_pub_key
 
-async function send(req, res, next) {
+async function send(req, res, _next) {
     const to_pub_key = req.params.to_pub_key;
     const { from_pub_key } = req.body;
 
@@ -66,10 +71,10 @@ async function send(req, res, next) {
         topic: 'com.tari.wallet',
         body: `Someone just sent you ${TICKER}.`,
         badge: 1,
-        pushType: "alert",
+        pushType: 'alert',
         sound: 'ping.aiff',
         mutableContent: true,
-        expiry: Math.floor(Date.now() / 1000) + (60 * 60 * EXPIRES_AFTER_HOURS)
+        expiry: Math.floor(Date.now() / 1000) + 60 * 60 * EXPIRES_AFTER_HOURS
     };
 
     try {
@@ -85,7 +90,7 @@ async function send(req, res, next) {
                 success = true;
                 debug(`Push notification delivered (sandbox=${sandbox})`);
             } else {
-                console.error("Push notification failed to deliver.")
+                console.error('Push notification failed to deliver.');
                 debug(JSON.stringify(sendResult[0]));
                 success = false;
             }
@@ -100,7 +105,7 @@ async function send(req, res, next) {
         try {
             await reminders.schedule_reminders_for_sender(to_pub_key, from_pub_key);
         } catch (error) {
-            console.error("Failed to schedule reminder push notifications");
+            console.error('Failed to schedule reminder push notifications');
             console.error(error);
         }
     }

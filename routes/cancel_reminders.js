@@ -1,7 +1,5 @@
 const express = require('express');
-const debug = require('debug')('aurora_push:routes:cancel_reminders');
 const router = express.Router();
-const db = require('../lib/database');
 
 router.post('/', cancelReminders);
 

@@ -10,6 +10,7 @@ const sendRouter = require('./routes/send');
 const cancelRouter = require('./routes/cancel_reminders');
 const adminRouter = require('./routes/admin');
 const healthRouter = require('./routes/health');
+const firebaseRouter = require('./routes/sendFirebase');
 
 const app = express();
 
@@ -24,15 +25,16 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', indexRouter);
 app.use('/register', registerRouter);
 app.use('/send', sendRouter);
+app.use('/send-firebase', firebaseRouter);
 app.use('/cancel-reminders', cancelRouter);
 app.use('/super-duper-only', adminRouter);
 app.use('/health', healthRouter);
 
-app.use(function(err, req, res, next) {
+app.use(function (err, _req, res, next) {
     if (res.headersSent) {
-      return next(err);
+        return next(err);
     }
-    console.error(err)
+    console.error(err);
     return res.json(err);
 });
 module.exports = app;

@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../lib/database');
-const reminders = require('../lib/reminders');
 
 router.use(simple_auth);
 router.get('/list', list);
@@ -17,7 +16,7 @@ function simple_auth(req, res, next) {
     return next();
 }
 
-function list(req, res, next) {
+function list(_, res, next) {
     return db.admin_list().then(rows => {
         return res.json(rows)
     }).catch(next);
