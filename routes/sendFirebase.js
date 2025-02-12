@@ -39,7 +39,7 @@ async function sendFirebase(req, res, _next) {
     let pubKey = to_pub_key;
 
     try {
-        tokenRows = await db.get_user_token({ pubKey: to_pub_key, appId, userId });
+        tokenRows = await db.get_user_token({ appId, userId });
         if (!tokenRows || !Array.isArray(tokenRows) || tokenRows.length === 0) {
             return res.status(404).json({ success: false });
         }

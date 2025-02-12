@@ -55,7 +55,7 @@ async function send(req, res, _next) {
     let tokenRows = [];
 
     try {
-        tokenRows = await db.get_user_token({ pubKey: to_pub_key });
+        tokenRows = await db.get_user_token(to_pub_key);
         if (!tokenRows && Array.isArray(tokenRows) && tokenRows.length === 0) {
             return res.status(404).json({ success: false });
         }
