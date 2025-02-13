@@ -17,7 +17,11 @@ const app = express();
 
 // Setup middleware
 app.use(middleware.create_env);
-app.use(logger());
+app.use(logger({
+    autoLogging: {
+        ignore: (req) => req.path === '/health' && req.headers['user-agent'].startsWith('kube-probe/')
+    }
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
