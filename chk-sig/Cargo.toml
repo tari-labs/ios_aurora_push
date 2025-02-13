@@ -23,7 +23,7 @@ cbindgen = "0.24.3"
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.36"
-rand = { version = "0.8.5", default-features = false }
+rand = { version = "0.9.0", default-features = false }
 getrandom = { version = "0.2.3", default-features = false, features = ["js"] }
 
 [lib]
