@@ -19,7 +19,7 @@ serde-wasm-bindgen = { version = "0.5.0" }
 wasm-bindgen = { version = "^0.2", features = ["serde-serialize"] }
 
 [build-dependencies]
-cbindgen = "0.24.3"
+cbindgen = "0.28.0"
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.36"
