@@ -1,4 +1,5 @@
 const express = require('express');
+const Sentry = require("@sentry/node");
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('pino-http');
@@ -30,6 +31,7 @@ app.use('/cancel-reminders', cancelRouter);
 app.use('/super-duper-only', adminRouter);
 app.use('/health', healthRouter);
 
+Sentry.setupExpressErrorHandler(app);
 app.use(function (err, _req, res, next) {
     if (res.headersSent) {
         return next(err);
