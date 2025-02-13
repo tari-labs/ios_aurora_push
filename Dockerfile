@@ -9,4 +9,4 @@ COPY . .
 USER "node"
 EXPOSE 3000
 
-ENTRYPOINT ["tini", "--", "node", "--require=instrument.js", "./bin/www"]
+ENTRYPOINT ["tini", "--", "node", "--require=./instrument.js", "./bin/www"]
