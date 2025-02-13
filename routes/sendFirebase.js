@@ -18,8 +18,8 @@ firebaseRouter.post('/', sendFirebase);
 // Check that the pub key is accompanied by a valid signature.
 // signature = from_pub_key + to_pub_key
 function check_signature(req, res, next) {
-    const { from_pub_key, signature, public_nonce } = req.body;
-    const msg = `${APP_API_KEY}${from_pub_key}`;
+    const { from_pub_key, signature, public_nonce, appId, userId } = req.body;
+    const msg = `${APP_API_KEY}${from_pub_key}${appId || ''}${userId || ''}`;
     const check = tari_crypto.check_signature(public_nonce, signature, from_pub_key, msg);
 
     if (check.result === true) {
