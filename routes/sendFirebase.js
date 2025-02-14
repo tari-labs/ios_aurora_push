@@ -59,7 +59,6 @@ async function sendFirebase(req, res, _next) {
     try {
         success = true;
         for (const { token, sandbox, pub_key } of tokenRows) {
-            console.log({ token, sandbox, pub_key });
             pubKey = pub_key;
             const service = sandbox ? sandbox_push_notifications : firebase_push_notifications;
             debug(`The send service is (sandbox=${sandbox})`);
