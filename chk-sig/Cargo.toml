@@ -11,7 +11,7 @@ version = "0.16.12" # Keep in line with Tari crypto
 edition = "2018"
 
 [dependencies]
-tari_utilities = "0.7.0"
+tari_utilities = "0.8.0"
 tari_crypto = "0.20.0"
 
 serde = "1.0"
