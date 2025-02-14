@@ -1,4 +1,4 @@
-FROM node:lts-alpine3.16
+FROM node:22-alpine
 
 RUN apk add --no-cache tini
 WORKDIR /home/node/app
