@@ -1,6 +1,8 @@
-FROM node:22-alpine
+FROM node:22-slim
 
-RUN apk add --no-cache tini
+RUN apt-get update \
+    && apt-get install -y tini ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 WORKDIR /home/node/app
 COPY ./package*.json ./
 
