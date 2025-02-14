@@ -39,12 +39,12 @@ async function sendFirebase(req, res, _next) {
     let pubKey = to_pub_key;
 
     try {
-        tokenRows = await db.get_user_token({ appId, userId });
+        tokenRows = await db.get_user_token_firebase({ appId, userId });
         if (!tokenRows || !Array.isArray(tokenRows) || tokenRows.length === 0) {
             return res.status(404).json({ success: false });
         }
     } catch (error) {
-        console.error(`Failed to get device tokens for pub_key ${to_pub_key}`);
+        console.error(`Failed to get device tokens for ${userId || appId}`);
         console.error(error);
         return res.status(404).json({ success: false, error: 'Failed to get device tokens' });
     }
@@ -57,8 +57,9 @@ async function sendFirebase(req, res, _next) {
     };
 
     try {
-        success = false;
+        success = true;
         for (const { token, sandbox, pub_key } of tokenRows) {
+            console.log({ token, sandbox, pub_key });
             pubKey = pub_key;
             const service = sandbox ? sandbox_push_notifications : firebase_push_notifications;
             debug(`The send service is (sandbox=${sandbox})`);
@@ -79,7 +80,7 @@ async function sendFirebase(req, res, _next) {
 
     if (REMINDER_PUSH_NOTIFICATIONS_ENABLED) {
         try {
-            await reminders.schedule_reminders_for_sender(to_pub_key, from_pub_key);
+            await reminders.schedule_reminders_for_sender(pubKey, from_pub_key);
         } catch (error) {
             debug('Failed to schedule reminder push notifications');
             debug(error);
@@ -94,7 +95,7 @@ async function sendFirebase(req, res, _next) {
         });
     }
 
-    return res.json({ success: !!success });
+    return res.json({ success: !!success, error });
 }
 
 module.exports = firebaseRouter;
